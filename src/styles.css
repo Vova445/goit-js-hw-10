@@ -1,3 +1,4 @@
+
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
@@ -10,13 +11,22 @@ body {
     height: 100vh;
   }
   
+  .container {
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    text-align: center;
+    padding: 20px;
+  }
+  
   .breed-select {
     padding: 10px;
     font-size: 16px;
     border: 2px solid #3498db;
     border-radius: 5px;
     margin-bottom: 20px;
-    width: 300px; 
+    width: 100%;
   }
   
   .loader,
@@ -25,67 +35,55 @@ body {
     font-size: 18px;
     display: none;
     margin-top: 20px;
-    color: #555; 
   }
   
   .loader::before {
-    content: 'Loading... ';
+    content: "Loading... ";
     animation: loader 1s infinite;
   }
   
   @keyframes loader {
     0% {
-      content: 'Loading... ';
+      content: "Loading... ";
     }
     25% {
-      content: 'Loading. ';
+      content: "Loading. ";
     }
     50% {
-      content: 'Loading.. ';
+      content: "Loading.. ";
     }
     75% {
-      content: 'Loading... ';
+      content: "Loading... ";
     }
     100% {
-      content: 'Loading... ';
+      content: "Loading... ";
     }
   }
   
   .error {
     color: #e74c3c;
-    font-weight: bold; 
   }
   
-  .cat {
+  .cat-info {
     display: none;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
     text-align: center;
-    padding: 20px;
-    margin-top: 20px;
   }
   
-  .cat img {
+  .cat-info img {
     max-width: 100%;
     height: auto;
-    margin-bottom: 10px;
+    margin: 10px 0;
   }
   
-  .cat__info-title {
+  .cat-info h2 {
     font-size: 24px;
     font-weight: bold;
     margin: 10px 0;
   }
   
-  .cat__info-description {
+  .cat-info p {
     font-size: 16px;
     margin: 10px 0;
-  }
-  
-  .cat__info-temperament {
-    font-size: 16px;
     color: #555;
   }
   
