@@ -1,90 +1,104 @@
-import { getBreeds, getCatByBreed } from './cat-api';
+import { fetchBreeds, fetchCatByBreed } from './cat-api';
 import SlimSelect from 'slim-select';
 import 'slim-select/dist/slimselect.css';
 import Notiflix from 'notiflix';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-let selectedBreedId = '';
+//  змінна для айді
+let breedId = '';
 
 const elements = {
-  breedSelect: document.querySelector('.breed-select'),
-  catInfo: document.querySelector('.cat-info'),
+  select: document.querySelector('.breed-select'),
+  info: document.querySelector('.cat-info'),
   loader: document.querySelector('.loader'),
   error: document.querySelector('.error'),
 };
 
 elements.loader.classList.add('is-hidden');
 elements.error.classList.add('is-hidden');
-elements.catInfo.classList.add('is-hidden');
+elements.info.classList.add('is-hidden');
 
-function fillBreedSelect() {
-  getBreeds()
+//Функція fetchList дозволяє відображати список порід кішок у випадаючому списку на вашому веб-сайті, щоб користувачі могли обрати породу кота, за якою вони бажають отримати інформацію.
+function fetchList() {
+  fetchBreeds()
     .then(breeds => {
-      const breedOptions = breeds.map(({ id, name }) => {
-        return `<option value="${id}">${name}</option>`;
-      }).join('');
-      elements.breedSelect.insertAdjacentHTML('beforeend', breedOptions);
+      const breedMarkup = breeds
+        .map(({ id, name }) => {
+          return `<option value="${id}">${name}</option>`;
+        })
+        .join('');
+      elements.select.insertAdjacentHTML('beforeend', breedMarkup);
 
       new SlimSelect({
-        select: elements.breedSelect,
+        select: elements.select,
       });
     })
-    .catch(handleError);
+    .catch(onError);
 }
 
-fillBreedSelect();
+fetchList();
+elements.select.addEventListener('change', onSelect);
 
-elements.breedSelect.addEventListener('change', handleBreedSelect);
-
-function handleBreedSelect(evt) {
+// на виборі породі
+function onSelect(evt) {
   evt.preventDefault();
-  displayLoader();
-  selectedBreedId = evt.target.value;
-  displayCatInfo(selectedBreedId);
+  onLoad();
+  breedId = evt.target.value;
+  showCat(breedId);
 }
 
-function displayCatInfo(breedId) {
+function showCat(breedId) {
   let selectedBreed;
-
-  getBreeds()
+  fetchBreeds()
+    // для отримання інформації про породу і зберігаємо її в selectedBreed
     .then(data => {
       selectedBreed = data.find(breed => breed.id === breedId);
-      return getCatByBreed(breedId);
+      //отримуэмо результат з запиту картинки
+      return fetchCatByBreed(breedId);
     })
     .then(catInfo => {
+      // забираэмо картинку з другого запиту
       const catData = catInfo[0];
-      const { description, temperament, name } = selectedBreed;
+
+      const description = selectedBreed.description;
+      const temperament = selectedBreed.temperament;
+      const name = selectedBreed.name;
       const { url } = catData;
 
-      const catInfoMarkup = `
-        <div class="cat">
-          <div class="cat__img">
-            <img src="${url}" alt="cat" width="500" />
-          </div>
-          <div class="cat__info-txt">
-            <h1 class="cat__info-title">${name}</h1>
-            <p class="cat__info-description">${description}</p>
-            <p class="cat__info-temperament"><span>Temperament:</span> ${temperament}</p>
-          </div>
-        </div>`;
-
-      elements.catInfo.innerHTML = catInfoMarkup;
-      displayCatInfoSection();
+      //формуємо розмітку
+      const oneCatMarkup = `
+         <div class="cat">
+         <div class="cat__img">
+           <img src="${url}" alt='cat' width='500'/>
+         </div class="cat__info-txt">
+           <h1 class="cat__info-title">${name}</h1>
+           <p class="cat__info-description">${description}</p>
+           <p class="cat__info-temperament"><span>Temperament:</span> ${temperament}</p>
+         </div></div>`;
+      //переписуємо інфо дів що б там не було
+      elements.info.innerHTML = oneCatMarkup;
+      onAppear();
     })
-    .catch(handleError);
+    .catch(onError);
 }
 
-function handleError(error) {
-  Notiflix.Notify.warning('Oops! Something went wrong! Try reloading the page!');
+//  в разі помилки
+function onError(error) {
+  // elements.error.classList.remove('is-hidden');
+  Notiflix.Notify.warning(
+    'Oops! Something went wrong! Try reloading the page!'
+  );
   console.log(error);
 }
 
-function displayCatInfoSection() {
+// на появі
+function onAppear() {
   elements.loader.classList.add('is-hidden');
-  elements.catInfo.classList.remove('is-hidden');
+  elements.info.classList.remove('is-hidden');
 }
 
-function displayLoader() {
+//на загрузці
+function onLoad() {
   elements.loader.classList.remove('is-hidden');
-  elements.catInfo.classList.add('is-hidden');
+  elements.info.classList.add('is-hidden');
 }
