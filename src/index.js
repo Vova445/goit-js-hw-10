@@ -71,7 +71,7 @@ function showCat(breedId) {
     .catch(onError);
 }
 function onError(error) {
-  Notiflix.Notify.warning(
+  Notiflix.Notify.failure(
     'Oops! Something went wrong! Try reloading the page!'
   );
   console.log(error);
