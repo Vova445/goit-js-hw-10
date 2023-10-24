@@ -23,8 +23,6 @@ fetchBreeds()
     breeds.forEach(breed => {
       slim.add(breed.id, breed.name);
     });
-  })
-  .then(() => {
     elements.loader.style.display = 'none';
     elements.select.style.display = 'block';
   })
@@ -32,6 +30,7 @@ fetchBreeds()
     elements.loader.style.display = 'none';
     elements.error.style.display = 'block';
     Notiflix.Notify.failure('Oops! Something went wrong. Try reloading the page.');
+    console.error(error);
   });
 
 elements.select.addEventListener('change', onSelect);
@@ -44,21 +43,20 @@ function onSelect(event) {
 }
 
 function showCat(breedId) {
+  elements.catInfo.innerHTML = '';
+
   fetchCatByBreed(breedId)
     .then(catData => {
       const [cat] = catData;
       const { url } = cat;
       return fetchBreeds()
-        .then(breeds => {
-          const selectedBreed = breeds.find(breed => breed.id === breedId);
-          return { url, selectedBreed };
-        });
+        .then(breeds => breeds.find(breed => breed.id === breedId));
     })
-    .then(({ url, selectedBreed }) => {
+    .then(selectedBreed => {
       elements.catInfo.innerHTML = `
         <div class="cat">
           <div class="cat__img">
-            <img src="${url}" alt="cat" width="500" />
+            <img src="${selectedBreed.url}" alt="cat" width="500" />
           </div>
           <div class="cat__info-txt">
             <h1 class="cat__info-title">${selectedBreed.name}</h1>
@@ -73,6 +71,6 @@ function showCat(breedId) {
     .catch(error => {
       elements.loader.style.display = 'none';
       Notiflix.Notify.failure('Oops! Something went wrong. Try reloading the page.');
-      console.log(error);
+      console.error(error);
     });
 }
