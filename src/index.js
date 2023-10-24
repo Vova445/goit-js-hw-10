@@ -1,76 +1,88 @@
 import { fetchBreeds, fetchCatByBreed } from './cat-api';
+import SlimSelect from 'slim-select';
 import 'slim-select/dist/slimselect.css';
 import Notiflix from 'notiflix';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
+
+let breedId = '';
 
 const elements = {
   select: document.querySelector('.breed-select'),
+  info: document.querySelector('.cat-info'),
   loader: document.querySelector('.loader'),
   error: document.querySelector('.error'),
-  catInfo: document.querySelector('.cat-info'),
 };
 
-elements.loader.style.display = 'block';
-elements.error.style.display = 'none';
-elements.catInfo.style.display = 'none';
+elements.loader.classList.add('is-hidden');
+elements.error.classList.add('is-hidden');
+elements.info.classList.add('is-hidden');
+function fetchList() {
+  fetchBreeds()
+    .then(breeds => {
+      const breedMarkup = breeds
+        .map(({ id, name }) => {
+          return `<option value="${id}">${name}</option>`;
+        })
+        .join('');
+      elements.select.insertAdjacentHTML('beforeend', breedMarkup);
 
-const slim = new SlimSelect({
-  select: elements.select,
-  showSearch: false,
-});
+      new SlimSelect({
+        select: elements.select,
+      });
+    })
+    .catch(onError);
+}
 
-fetchBreeds()
-  .then(breeds => {
-    breeds.forEach(breed => {
-      slim.add(breed.id, breed.name);
-    });
-    elements.loader.style.display = 'none';
-    elements.select.style.display = 'block';
-  })
-  .catch(error => {
-    elements.loader.style.display = 'none';
-    elements.error.style.display = 'block';
-    Notiflix.Notify.failure('Oops! Something went wrong. Try reloading the page.');
-    console.error(error);
-  });
-
+fetchList();
 elements.select.addEventListener('change', onSelect);
-
-function onSelect(event) {
-  elements.loader.style.display = 'block';
-  elements.catInfo.style.display = 'none';
-  const breedId = event.target.value;
+function onSelect(evt) {
+  evt.preventDefault();
+  onLoad();
+  breedId = evt.target.value;
   showCat(breedId);
 }
 
 function showCat(breedId) {
-  elements.catInfo.innerHTML = '';
+  let selectedBreed;
+  fetchBreeds()
+    .then(data => {
+      selectedBreed = data.find(breed => breed.id === breedId);
+      return fetchCatByBreed(breedId);
+    })
+    .then(catInfo => {
+      const catData = catInfo[0];
 
-  fetchCatByBreed(breedId)
-    .then(catData => {
-      const [cat] = catData;
-      const { url } = cat;
-      return fetchBreeds()
-        .then(breeds => breeds.find(breed => breed.id === breedId));
+      const description = selectedBreed.description;
+      const temperament = selectedBreed.temperament;
+      const name = selectedBreed.name;
+      const { url } = catData;
+      const oneCatMarkup = `
+         <div class="cat">
+         <div class="cat__img">
+           <img src="${url}" alt='cat' width='500'/>
+         </div class="cat__info-txt">
+           <h1 class="cat__info-title">${name}</h1>
+           <p class="cat__info-description">${description}</p>
+           <p class="cat__info-temperament"><span>Temperament:</span> ${temperament}</p>
+         </div></div>`;
+      elements.info.innerHTML = oneCatMarkup;
+      onAppear();
     })
-    .then(selectedBreed => {
-      elements.catInfo.innerHTML = `
-        <div class="cat">
-          <div class="cat__img">
-            <img src="${selectedBreed.url}" alt="cat" width="500" />
-          </div>
-          <div class="cat__info-txt">
-            <h1 class="cat__info-title">${selectedBreed.name}</h1>
-            <p class="cat__info-description">${selectedBreed.description}</p>
-            <p class="cat__info-temperament"><span>Temperament:</span> ${selectedBreed.temperament}</p>
-          </div>
-        </div>
-      `;
-      elements.loader.style.display = 'none';
-      elements.catInfo.style.display = 'block';
-    })
-    .catch(error => {
-      elements.loader.style.display = 'none';
-      Notiflix.Notify.failure('Oops! Something went wrong. Try reloading the page.');
-      console.error(error);
-    });
+    .catch(onError);
+}
+function onError(error) {
+  Notiflix.Notify.warning(
+    'Oops! Something went wrong! Try reloading the page!'
+  );
+  console.log(error);
+}
+
+function onAppear() {
+  elements.loader.classList.add('is-hidden');
+  elements.info.classList.remove('is-hidden');
+}
+
+function onLoad() {
+  elements.loader.classList.remove('is-hidden');
+  elements.info.classList.add('is-hidden');
 }
